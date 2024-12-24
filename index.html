@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务仪表盘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        :root {
+            --primary: #8B5CF6;
+            --secondary: #EC4899;
+            --accent: #A78BFA;
+            --background: #1F2937;
+            --card: #374151;
+        }
+        body {
+            background-color: var(--background);
+            color: #fff;
+        }
+        .card {
+            background-color: var(--card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        .progress-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-6">
+        <!-- 顶部导航 -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold">仪表盘</h1>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <input type="text" placeholder="搜索..." 
+                           class="bg-gray-700 rounded-lg px-4 py-2 w-64 text-sm">
+                </div>
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
+                     class="w-10 h-10 rounded-full">
+            </div>
+        </div>
+
+        <!-- 主要指标 -->
+        <div class="card mb-8">
+            <div class="grid grid-cols-3 gap-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 mb-1">现金流</p>
+                        <p class="text-2xl font-bold">¥2,100,000</p>
+                        <p class="text-sm text-green-400">可维持 24 周</p>
+                    </div>
+                    <div class="progress-ring" id="cashFlowProgress"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 mb-1">月度支出</p>
+                        <p class="text-2xl font-bold">¥740,000</p>
+                        <p class="text-sm text-gray-400">近3月平均</p>
+                    </div>
+                    <div class="progress-ring" id="expenseProgress"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-gray-400 mb-1">投资回报率</p>
+                        <p class="text-2xl font-bold">16.8%</p>
+                        <p class="text-sm text-green-400">+2.4%</p>
+                    </div>
+                    <div class="progress-ring" id="roiProgress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收入支出趋势图 -->
+        <div class="card mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-pink-500"></span>
+                        收入
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-blue-400"></span>
+                        支出
+                    </span>
+                </div>
+                <select class="bg-gray-700 rounded px-3 py-1 text-sm">
+                    <option>最近一周</option>
+                    <option>最近一月</option>
+                    <option>���近一年</option>
+                </select>
+            </div>
+            <div class="h-64" id="trendChart"></div>
+        </div>
+
+        <!-- 投资和存款 -->
+        <div class="grid grid-cols-2 gap-8 mb-8">
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">投资金额</h3>
+                    <div class="flex gap-4">
+                        <span class="flex items-center gap-2 text-sm">
+                            <span class="w-3 h-3 rounded-full bg-blue-400"></span>
+                            贷款投资
+                        </span>
+                        <span class="flex items-center gap-2 text-sm">
+                            <span class="w-3 h-3 rounded-full bg-purple-400"></span>
+                            股权投资
+                        </span>
+                    </div>
+                </div>
+                <p class="text-2xl font-bold mb-2">¥11,351,000</p>
+                <div class="w-full bg-gray-700 h-3 rounded-full">
+                    <div class="flex h-full rounded-full overflow-hidden">
+                        <div class="bg-blue-400 h-full" style="width: 65%"></div>
+                        <div class="bg-purple-400 h-full" style="width: 35%"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-2 text-sm text-gray-400">
+                    <span>¥7,378,150</span>
+                    <span>¥3,972,850</span>
+                </div>
+            </div>
+            
+            <!-- 新增年度预测模块 -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">年度收入预测</h3>
+                    <select class="bg-gray-700 rounded px-3 py-1 text-sm">
+                        <option>2024年</option>
+                        <option>2023年</option>
+                    </select>
+                </div>
+                <div class="h-40" id="forecastChart"></div>
+            </div>
+        </div>
+
+        <!-- 新增月度环比分析模块 -->
+        <div class="card mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold">月度环比分析</h3>
+                <div class="flex gap-4">
+                    <span class="flex items-center gap-2 text-sm">
+                        <span class="w-3 h-3 rounded-full bg-green-400"></span>
+                        增长
+                    </span>
+                    <span class="flex items-center gap-2 text-sm">
+                        <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                        下降
+                    </span>
+                </div>
+            </div>
+            <div class="h-64" id="monthlyChangeChart"></div>
+        </div>
+
+        <!-- 数据操作模块 -->
+        <div class="card mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-semibold">数据操作</h3>
+                <div class="flex items-center gap-4">
+                    <button onclick="generateExcelTemplate()" 
+                            class="text-sm text-purple-400 hover:text-purple-300">
+                        下载Excel模板
+                    </button>
+                    <select id="timeRange" class="bg-gray-700 rounded px-3 py-1 text-sm" onchange="updateTimeRange()">
+                        <option value="1">近1个月</option>
+                        <option value="3">近3个月</option>
+                        <option value="6">近6个月</option>
+                    </select>
+                    <span class="text-sm text-gray-400">支持 .xlsx, .xls 格式</span>
+                </div>
+            </div>
+            
+            <!-- 数据编辑表格 -->
+            <div class="overflow-x-auto mb-6">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-gray-400 border-b border-gray-700">
+                            <th class="py-3 text-left">日期</th>
+                            <th class="py-3 text-right">现金流(万)</th>
+                            <th class="py-3 text-right">收入(万)</th>
+                            <th class="py-3 text-right">支出(万)</th>
+                            <th class="py-3 text-right">贷款投资(万)</th>
+                            <th class="py-3 text-right">股权投资(万)</th>
+                            <th class="py-3 text-right">投资回报率(%)</th>
+                            <th class="py-3 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable">
+                        <!-- 数据行将通过JavaScript动态生成 -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8" class="py-3">
+                                <button onclick="addNewRow()" 
+                                        class="w-full text-center text-sm text-gray-400 hover:text-white">
+                                    <i class="ri-add-line"></i> 添加新行
+                                </button>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- 数据统计 -->
+            <div class="grid grid-cols-3 gap-6 mb-6">
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-sm text-gray-400 mb-2">平均现金流</h4>
+                    <p class="text-xl font-bold" id="avgCashFlow">¥0</p>
+                    <p class="text-sm text-gray-400">可维持<span id="sustainableWeeks">0</span>周</p>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-sm text-gray-400 mb-2">平均投资回报</h4>
+                    <p class="text-xl font-bold" id="avgROI">0%</p>
+                    <p class="text-sm text-gray-400">环比<span id="roiChange">0%</span></p>
+                </div>
+                <div class="bg-gray-700 rounded-lg p-4">
+                    <h4 class="text-sm text-gray-400 mb-2">收支比</h4>
+                    <p class="text-xl font-bold" id="incomeExpenseRatio">0%</p>
+                    <p class="text-sm text-gray-400">建议控制在70%以下</p>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="grid grid-cols-3 gap-6">
+                <div class="relative">
+                    <input type="file" id="excelInput" accept=".xlsx,.xls" class="hidden" 
+                           onchange="handleExcelImport(event)">
+                    <button onclick="document.getElementById('excelInput').click()" 
+                            class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 transition-colors">
+                        <div class="flex flex-col items-center gap-2">
+                            <i class="ri-file-excel-2-line text-2xl"></i>
+                            <span>导入Excel数据</span>
+                        </div>
+                    </button>
+                </div>
+
+                <button onclick="exportReport()" 
+                        class="bg-green-500 hover:bg-green-600 text-white rounded-lg p-4 transition-colors">
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ri-file-chart-line text-2xl"></i>
+                        <span>导出财务报表</span>
+                    </div>
+                </button>
+
+                <button onclick="generateReport()" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white rounded-lg p-4 transition-colors">
+                    <div class="flex flex-col items-center gap-2">
+                        <i class="ri-bar-chart-box-line text-2xl"></i>
+                        <span>生成分析报告</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- 添加报告预览模态框 -->
+        <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+            <div class="bg-gray-800 rounded-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold">财务分析报告</h3>
+                        <button onclick="closeReportModal()" 
+                                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 
+                                       text-gray-300 hover:text-white transition-colors">
+                            <span>关闭</span>
+                            <i class="ri-close-line text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="reportContent" class="space-y-6">
+                        <!-- 报告内容将通过 JavaScript 动态插入 -->
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="closeReportModal()" 
+                                class="flex items-center gap-2 px-6 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 
+                                       text-white transition-colors">
+                            <span>确认并关闭</span>
+                            <i class="ri-check-line text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局数据存储
+        let financialData = [];
+
+        // 初始化数据表格
+        function initializeDataTable() {
+            const currentDate = new Date();
+            const initialData = [];
+            
+            // 生成最近6个月的数据行
+            for (let i = 0; i < 6; i++) {
+                const date = new Date(currentDate);
+                date.setMonth(date.getMonth() - i);
+                initialData.unshift({
+                    date: date.toISOString().split('T')[0],
+                    cashFlow: 0,
+                    income: 0,
+                    expense: 0,
+                    loanInvestment: 0,
+                    equityInvestment: 0,
+                    roi: 0
+                });
+            }
+            
+            financialData = initialData;
+            renderDataTable();
+            updateStatistics();
+        }
+
+        // 渲染数据表格
+        function renderDataTable() {
+            const tbody = document.getElementById('dataTable');
+            tbody.innerHTML = financialData.map((row, index) => `
+                <tr class="border-b border-gray-700">
+                    <td class="py-3">
+                        <input type="date" value="${row.date}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full"
+                               onchange="updateData(${index}, 'date', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.cashFlow}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'cashFlow', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.income}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'income', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.expense}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'expense', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.loanInvestment}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'loanInvestment', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.equityInvestment}" 
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'equityInvestment', this.value)">
+                    </td>
+                    <td class="py-3">
+                        <input type="number" value="${row.roi}" step="0.1"
+                               class="bg-gray-700 rounded px-2 py-1 w-full text-right"
+                               onchange="updateData(${index}, 'roi', this.value)">
+                    </td>
+                    <td class="py-3 text-center">
+                        <button onclick="deleteRow(${index})" 
+                                class="text-red-400 hover:text-red-300">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 更新数据
+        function updateData(index, field, value) {
+            financialData[index][field] = parseFloat(value) || 0;
+            updateStatistics();
+            updateCharts();
+        }
+
+        // 更新统计数据
+        function updateStatistics() {
+            const timeRange = parseInt(document.getElementById('timeRange').value);
+            const recentData = financialData.slice(-timeRange);
+            
+            // 计算平均现金流
+            const avgCashFlow = recentData.reduce((sum, row) => sum + row.cashFlow, 0) / recentData.length;
+            document.getElementById('avgCashFlow').textContent = `¥${avgCashFlow.toFixed(2)}万`;
+            
+            // 计算可维持周数
+            const avgExpense = recentData.reduce((sum, row) => sum + row.expense, 0) / recentData.length;
+            const sustainableWeeks = avgExpense > 0 ? Math.floor((avgCashFlow / avgExpense) * 4) : 0;
+            document.getElementById('sustainableWeeks').textContent = sustainableWeeks;
+            
+            // 计算平均投资回报率
+            const avgROI = recentData.reduce((sum, row) => sum + row.roi, 0) / recentData.length;
+            document.getElementById('avgROI').textContent = `${avgROI.toFixed(1)}%`;
+            
+            // 计算收支比
+            const totalIncome = recentData.reduce((sum, row) => sum + row.income, 0);
+            const totalExpense = recentData.reduce((sum, row) => sum + row.expense, 0);
+            const ratio = totalIncome > 0 ? (totalExpense / totalIncome * 100) : 0;
+            document.getElementById('incomeExpenseRatio').textContent = `${ratio.toFixed(1)}%`;
+        }
+
+        // 添加新行
+        function addNewRow() {
+            const lastDate = financialData.length > 0 
+                ? new Date(financialData[financialData.length - 1].date) 
+                : new Date();
+            lastDate.setMonth(lastDate.getMonth() + 1);
+            
+            financialData.push({
+                date: lastDate.toISOString().split('T')[0],
+                cashFlow: 0,
+                income: 0,
+                expense: 0,
+                loanInvestment: 0,
+                equityInvestment: 0,
+                roi: 0
+            });
+            
+            renderDataTable();
+        }
+
+        // 删除行
+        function deleteRow(index) {
+            financialData.splice(index, 1);
+            renderDataTable();
+            updateStatistics();
+            updateCharts();
+        }
+
+        // 更新时间范围
+        function updateTimeRange() {
+            updateStatistics();
+            updateCharts();
+        }
+
+        // 更新所有图表
+        function updateCharts() {
+            renderTrendChart();
+            renderForecastChart();
+            renderMonthlyChangeChart();
+        }
+
+        // 修改导出报表函数
+        function exportReport() {
+            try {
+                const wb = XLSX.utils.book_new();
+                
+                // 导出原始数据
+                const ws_data = XLSX.utils.json_to_sheet(financialData);
+                XLSX.utils.book_append_sheet(wb, ws_data, "原始数据");
+                
+                // 导出统计分析
+                const timeRange = parseInt(document.getElementById('timeRange').value);
+                const recentData = financialData.slice(-timeRange);
+                const analysisData = [
+                    ['统计周期', `近${timeRange}个月`],
+                    ['平均现金流', document.getElementById('avgCashFlow').textContent],
+                    ['可维持周数', document.getElementById('sustainableWeeks').textContent],
+                    ['平均投资回报', document.getElementById('avgROI').textContent],
+                    ['收支比', document.getElementById('incomeExpenseRatio').textContent]
+                ];
+                const ws_analysis = XLSX.utils.aoa_to_sheet(analysisData);
+                XLSX.utils.book_append_sheet(wb, ws_analysis, "统计分析");
+                
+                // 导出文件
+                XLSX.writeFile(wb, `财务报表_${new Date().toLocaleDateString()}.xlsx`);
+                showOperationResult('导出成功', '财务报表已成功导出');
+            } catch (error) {
+                showOperationResult('导出失败', error.message, 'error');
+            }
+        }
+
+        // 渲染进度环
+        function renderProgress(elementId, percentage, color) {
+            const chart = echarts.init(document.getElementById(elementId));
+            const option = {
+                series: [{
+                    type: 'pie',
+                    radius: ['85%', '100%'],
+                    avoidLabelOverlap: false,
+                    label: { show: false },
+                    silent: true,
+                    data: [
+                        {
+                            value: percentage,
+                            itemStyle: { color: color }
+                        },
+                        {
+                            value: 100 - percentage,
+                            itemStyle: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    ]
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        // 渲染趋势图
+        function renderTrendChart() {
+            const chart = echarts.init(document.getElementById('trendChart'));
+            
+            // 生成模拟数据
+            function generateData(baseValue, count) {
+                let data = [];
+                for (let i = 0; i < count; i++) {
+                    data.push(baseValue + Math.random() * 2000);
+                }
+                return data;
+            }
+
+            const option = {
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    top: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    axisLine: { lineStyle: { color: '#4B5563' } },
+                    axisTick: { show: false }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { color: '#374151' } },
+                    axisLine: { show: false }
+                },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'line',
+                        smooth: true,
+                        data: generateData(3000, 7),
+                        lineStyle: { color: '#EC4899' },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: 'rgba(236,72,153,0.3)' },
+                                    { offset: 1, color: 'rgba(236,72,153,0)' }
+                                ]
+                            }
+                        },
+                        symbol: 'none'
+                    },
+                    {
+                        name: '支出',
+                        type: 'line',
+                        smooth: true,
+                        data: generateData(2000, 7),
+                        lineStyle: { color: '#60A5FA' },
+                        areaStyle: {
+                            color: {
+                                type: 'linear',
+                                x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: 'rgba(96,165,250,0.3)' },
+                                    { offset: 1, color: 'rgba(96,165,250,0)' }
+                                ]
+                            }
+                        },
+                        symbol: 'none'
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+
+            // 添加动画效果
+            setInterval(() => {
+                option.series[0].data = generateData(3000, 7);
+                option.series[1].data = generateData(2000, 7);
+                chart.setOption(option);
+            }, 3000);
+        }
+
+        // 渲染年度预测图表
+        function renderForecastChart() {
+            const chart = echarts.init(document.getElementById('forecastChart'));
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: '{b}: {c}万'
+                },
+                grid: {
+                    top: '10%',
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Q1', 'Q2', 'Q3', 'Q4'],
+                    axisLine: { lineStyle: { color: '#4B5563' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { color: '#374151' } },
+                    axisLabel: {
+                        formatter: '{value}万'
+                    }
+                },
+                series: [{
+                    data: [820, 932, 901, 934],
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: { color: '#10B981' },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0, y: 0, x2: 0, y2: 1,
+                            colorStops: [
+                                { offset: 0, color: 'rgba(16,185,129,0.3)' },
+                                { offset: 1, color: 'rgba(16,185,129,0)' }
+                            ]
+                        }
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        // 渲染月度环比图表
+        function renderMonthlyChangeChart() {
+            const chart = echarts.init(document.getElementById('monthlyChangeChart'));
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    axisLine: { lineStyle: { color: '#4B5563' } }
+                },
+                yAxis: {
+                    type: 'value',
+                    splitLine: { lineStyle: { color: '#374151' } },
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: [{
+                    name: '环比变化',
+                    type: 'bar',
+                    data: [12.3, -5.2, 8.4, -3.1, 15.2, 6.8],
+                    itemStyle: {
+                        color: function(params) {
+                            return params.data >= 0 ? '#10B981' : '#EF4444';
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}%'
+                    }
+                }]
+            };
+            chart.setOption(option);
+        }
+
+        // 修改 Excel 导入处理函数
+        async function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // 读取财务数据页
+                    const dataSheet = workbook.Sheets['财务数据'];
+                    if (!dataSheet) {
+                        throw new Error('未找到"财务数据"工作表');
+                    }
+
+                    // 转换数据
+                    const jsonData = XLSX.utils.sheet_to_json(dataSheet, { header: 1 });
+                    // 移除表头
+                    jsonData.shift();
+                    
+                    // 验证数据格式
+                    const validatedData = jsonData.map(row => {
+                        if (row.length < 7) {
+                            throw new Error('数据格式不完整');
+                        }
+                        return {
+                            date: row[0],
+                            cashFlow: parseFloat(row[1]),
+                            income: parseFloat(row[2]),
+                            expense: parseFloat(row[3]),
+                            loanInvestment: parseFloat(row[4]),
+                            equityInvestment: parseFloat(row[5]),
+                            roi: parseFloat(row[6])
+                        };
+                    });
+
+                    // 更新全局数据
+                    financialData = validatedData;
+                    
+                    // 更新界面
+                    renderDataTable();
+                    updateStatistics();
+                    updateCharts();
+
+                    // 读取统计分析页（如果存在）
+                    const analysisSheet = workbook.Sheets['统计分析'];
+                    if (analysisSheet) {
+                        const analysisData = XLSX.utils.sheet_to_json(analysisSheet, { header: 1 });
+                        // 可以使用分析数据更新其他指标...
+                    }
+
+                    showOperationResult('数据导入成功', `成功导入 ${validatedData.length} 条数据`);
+                };
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                showOperationResult('导入失败', error.message, 'error');
+            }
+        }
+
+        // 生成分析报告
+        function generateReport() {
+            const reportData = {
+                overview: {
+                    title: '财务概况',
+                    content: '根据最新数据分析，公司整体财务状况稳健。现金流充足，可维持24周运营，高于行业平均水平。',
+                    metrics: [
+                        { label: '现金流状况', value: '良好', trend: '上升' },
+                        { label: '运营效率', value: '优秀', trend: '稳定' }
+                    ]
+                },
+                investment: {
+                    title: '投资组合分析',
+                    content: '投资结构合理，贷款投资占比65%，股权投资占比35%。贷款投资提供稳定现金流，股权投资带来较高增长潜力。',
+                    recommendations: [
+                        '建议适当增加股权投资比例',
+                        '关注高科技领域投资机会'
+                    ]
+                },
+                risks: {
+                    title: '风险提示',
+                    items: [
+                        '市场波动风险：建议加强风险管理',
+                        '流动性风险：维持充足现金储备',
+                        '投资集中风险：适当分散投资组合'
+                    ]
+                }
+            };
+
+            showReport(reportData);
+        }
+
+        // 显示报告模态框
+        function showReport(data) {
+            const reportContent = document.getElementById('reportContent');
+            reportContent.innerHTML = `
+                <div class="space-y-8">
+                    <!-- 财务概况 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-purple-400 mb-4">${data.overview.title}</h4>
+                        <p class="text-gray-300 mb-4">${data.overview.content}</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            ${data.overview.metrics.map(metric => `
+                                <div class="bg-gray-700 rounded-lg p-4">
+                                    <div class="text-sm text-gray-400">${metric.label}</div>
+                                    <div class="font-semibold">${metric.value}</div>
+                                    <div class="text-sm text-green-400">趋势：${metric.trend}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- 投资分析 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-purple-400 mb-4">${data.investment.title}</h4>
+                        <p class="text-gray-300 mb-4">${data.investment.content}</p>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <h5 class="font-semibold mb-2">投资建议</h5>
+                            <ul class="list-disc list-inside text-gray-300">
+                                ${data.investment.recommendations.map(rec => `
+                                    <li>${rec}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 风险提示 -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-purple-400 mb-4">${data.risks.title}</h4>
+                        <div class="bg-gray-700 rounded-lg p-4">
+                            <ul class="space-y-2 text-gray-300">
+                                ${data.risks.items.map(item => `
+                                    <li class="flex items-center gap-2">
+                                        <i class="ri-alert-line text-yellow-500"></i>
+                                        ${item}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        // 关闭报告模态框
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        // 显示操作结果
+        function showOperationResult(title, message, type = 'success') {
+            const result = document.getElementById('operationResult');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+
+            resultTitle.textContent = title;
+            resultMessage.textContent = message;
+            result.classList.remove('hidden');
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                result.classList.add('hidden');
+            }, 3000);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProgress('cashFlowProgress', 75, '#10B981');
+            renderProgress('expenseProgress', 25, '#60A5FA');
+            renderProgress('roiProgress', 68, '#8B5CF6');
+            renderTrendChart();
+            renderForecastChart();
+            renderMonthlyChangeChart();
+
+            // 响应式处理
+            window.addEventListener('resize', () => {
+                const charts = document.querySelectorAll('.progress-ring, #trendChart, #forecastChart, #monthlyChangeChart');
+                charts.forEach(container => {
+                    const chart = echarts.getInstanceByDom(container);
+                    if (chart) {
+                        chart.resize();
+                    }
+                });
+            });
+
+            initializeDataTable();
+        });
+
+        // 修改 generateExcelTemplate 函数
+        function generateExcelTemplate() {
+            const wb = XLSX.utils.book_new();
+            
+            // 获取当前仪表盘数据
+            const dashboardData = {
+                cashFlow: document.querySelector('[id="avgCashFlow"]').textContent.replace('¥', '').replace('万', ''),
+                sustainableWeeks: document.querySelector('[id="sustainableWeeks"]').textContent,
+                roi: document.querySelector('[id="avgROI"]').textContent.replace('%', ''),
+                incomeExpenseRatio: document.querySelector('[id="incomeExpenseRatio"]').textContent.replace('%', ''),
+                loanInvestment: '7,378,150',
+                equityInvestment: '3,972,850'
+            };
+
+            // 创建财务数据模板（使用实际数据）
+            const templateData = [
+                ['日期', '现金流(万)', '收入(万)', '支出(万)', '贷款投资(万)', '股权投资(万)', '投资回报率(%)', '备注'],
+                // 使用 financialData 全局变量中的实际数据
+                ...financialData.map(row => [
+                    row.date,
+                    row.cashFlow,
+                    row.income,
+                    row.expense,
+                    row.loanInvestment,
+                    row.equityInvestment,
+                    row.roi,
+                    ''
+                ])
+            ];
+            
+            // 添加数据页
+            const ws_data = XLSX.utils.aoa_to_sheet(templateData);
+            
+            // 设置列宽
+            const wscols = [
+                {wch: 12}, // 日期
+                {wch: 12}, // 现金流
+                {wch: 12}, // 收入
+                {wch: 12}, // 支出
+                {wch: 12}, // 贷款投资
+                {wch: 12}, // 股权投资
+                {wch: 12}, // 投资回报率
+                {wch: 20}  // 备注
+            ];
+            ws_data['!cols'] = wscols;
+            
+            XLSX.utils.book_append_sheet(wb, ws_data, "财务数据");
+
+            // 添加说明页
+            const instructionsData = [
+                ['财务数据填报说明'],
+                [''],
+                ['1. 数据格式规范'],
+                ['字段名', '类型', '说明', '单位', '示例'],
+                ['日期', '日期', '记录日期', 'YYYY-MM-DD', '2024-03-01'],
+                ['现金流', '数值', '当月现金流量', '万元', '2100'],
+                ['收入', '数值', '当月总收入', '万元', '3500'],
+                ['支出', '数值', '当月总支出', '万元', '1400'],
+                ['贷款投资', '数值', '贷款类投资总额', '万元', '7500'],
+                ['股权投资', '数值', '股权类投资总额', '万元', '3800'],
+                ['投资回报率', '数值', '投资综合回报率', '%', '16.8'],
+                [''],
+                ['2. 注意事项'],
+                ['• 所有金额单位统一为万元'],
+                ['• 日期必须使用YYYY-MM-DD格式'],
+                ['• 投资回报率为百分比，直接输入数字，无需输入%符号'],
+                ['• 数据请按时间顺序填写，新数据在前'],
+                [''],
+                ['3. 数据验证规则'],
+                ['• 现金流 = 收入 - 支出'],
+                ['• 投资回报率不得超过100%'],
+                ['• 支出不得大于收入的150%'],
+                ['• 投资总额需符合公司风控要求']
+            ];
+            
+            const ws_instructions = XLSX.utils.aoa_to_sheet(instructionsData);
+            ws_instructions['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 4}}, // 合并标题单元格
+            ];
+            XLSX.utils.book_append_sheet(wb, ws_instructions, "填表说明");
+
+            // 添加统计分析页（使用实际数据和公式）
+            const formulaData = [
+                ['财务指标统计分析'],
+                [''],
+                ['1. 当前运营指标'],
+                ['指标名称', '当前值', '参考值', '状态评估'],
+                ['平均现金流', `${dashboardData.cashFlow}万`, '2000万', calculateStatus(dashboardData.cashFlow, 2000)],
+                ['可维持周数', `${dashboardData.sustainableWeeks}周`, '20周', calculateStatus(dashboardData.sustainableWeeks, 20)],
+                ['平均投资回报率', `${dashboardData.roi}%`, '15%', calculateStatus(dashboardData.roi, 15)],
+                ['收支比', `${dashboardData.incomeExpenseRatio}%`, '70%', calculateReverseStatus(dashboardData.incomeExpenseRatio, 70)],
+                [''],
+                ['2. 投资组合分析'],
+                ['投资类型', '金额(万)', '占比', '建议比例'],
+                ['贷款投资', dashboardData.loanInvestment, '65%', '60-70%'],
+                ['股权投资', dashboardData.equityInvestment, '35%', '30-40%'],
+                [''],
+                ['3. 计算公式说明'],
+                ['指标', '计算方法'],
+                ['现金流增长率', '(本期现金流-上期现金流)/上期现金流×100%'],
+                ['投资回报率', '投资收益/投资本金×100%'],
+                ['收支比', '支出总额/收入总额×100%'],
+                ['可维持周数', '现金流/周平均支出']
+            ];
+            
+            const ws_formula = XLSX.utils.aoa_to_sheet(formulaData);
+            ws_formula['!merges'] = [
+                {s: {r: 0, c: 0}, e: {r: 0, c: 3}}, // 合并标题单元格
+            ];
+            XLSX.utils.book_append_sheet(wb, ws_formula, "统计分析");
+
+            // 设置文件名（包含时间戳）
+            const timestamp = new Date().toISOString().split('T')[0];
+            const fileName = `财务数据模板_${timestamp}.xlsx`;
+
+            // 导出文件
+            XLSX.writeFile(wb, fileName);
+        }
+
+        // 辅助函数：计算状态评估
+        function calculateStatus(current, target) {
+            const ratio = current / target;
+            if (ratio >= 1.1) return '优秀';
+            if (ratio >= 0.9) return '良好';
+            if (ratio >= 0.7) return '一般';
+            return '需改善';
+        }
+
+        // 辅助函数：计算反向状态评估（用于收支比等指标）
+        function calculateReverseStatus(current, target) {
+            const ratio = current / target;
+            if (ratio <= 0.8) return '优秀';
+            if (ratio <= 1.0) return '良好';
+            if (ratio <= 1.2) return '一般';
+            return '需改善';
+        }
+    </script>
+</body>
+</html> 
